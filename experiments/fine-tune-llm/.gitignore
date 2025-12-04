@@ -1,0 +1,14 @@
+# Generated training data
+data/
+
+# Results
+results/
+
+# Job info files
+*_job_info.json
+job_info.json
+
+# Python
+__pycache__/
+*.pyc
+
