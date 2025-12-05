@@ -3,7 +3,7 @@
 TBTA Embedding Generator
 
 Creates vector embeddings for verses, concepts, and Strong's entries
-using sentence-transformers and sqlite-vec.
+using sentence-transformers or OpenAI and sqlite-vec.
 
 Input:
   - databases/verses.sqlite
@@ -13,37 +13,41 @@ Input:
   - .data/strongs/ YAML files (for Strong's data)
 
 Output:
-  - embeddings/verse_vectors.sqlite
-  - embeddings/concept_vectors.sqlite
-  - embeddings/strongs_vectors.sqlite
+  - databases/embeddings/local/   (sentence-transformers)
+  - databases/embeddings/openai/  (OpenAI API)
 
 Requirements:
   pip install sentence-transformers sqlite-vec apsw numpy pyyaml tqdm
+  pip install openai  # for OpenAI embeddings
 
 Usage:
+    # Local model (default)
     python scripts/create_embeddings.py
-    python scripts/create_embeddings.py --skip-strongs
-    python scripts/create_embeddings.py --model all-MiniLM-L6-v2
+    python scripts/create_embeddings.py --provider local --model paraphrase-multilingual-MiniLM-L12-v2
+    
+    # OpenAI (requires OPENAI_API_KEY env var)
+    python scripts/create_embeddings.py --provider openai
+    python scripts/create_embeddings.py --provider openai --model text-embedding-3-small --dims 384
 """
 
 import argparse
 import json
+import os
 import re
 import sqlite3
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Callable
 
 import numpy as np
 
 try:
     import apsw
     import sqlite_vec
-    from sentence_transformers import SentenceTransformer
     from tqdm import tqdm
 except ImportError as e:
     print(f"Missing dependency: {e}")
-    print("Install with: pip install sentence-transformers sqlite-vec apsw numpy pyyaml tqdm")
+    print("Install with: pip install sqlite-vec apsw numpy pyyaml tqdm")
     sys.exit(1)
 
 try:
@@ -55,11 +59,20 @@ except ImportError:
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_DIR = SCRIPT_DIR.parent
 DB_DIR = PROJECT_DIR / "databases"
-EMB_DIR = PROJECT_DIR / "embeddings"
+EMB_BASE_DIR = PROJECT_DIR / "databases" / "embeddings"
 
-# Default model
-DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DIMS = 384
+# Model configs
+PROVIDERS = {
+    "local": {
+        "default_model": "paraphrase-multilingual-MiniLM-L12-v2",
+        "default_dims": 384,
+    },
+    "openai": {
+        "default_model": "text-embedding-3-small",
+        "default_dims": 512,  # Can reduce from 1536 for cost/speed
+    }
+}
+
 BATCH_SIZE = 128
 MAX_CHARS = 1000
 
@@ -70,19 +83,90 @@ def float32_to_int8(embeddings: np.ndarray) -> np.ndarray:
     return (clipped * 127).astype(np.int8)
 
 
-def encode_batch(model, texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
-    """Encode texts in batches, return all embeddings."""
-    all_embeddings = []
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i:i+batch_size]
-        embeddings = model.encode(
-            batch,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-            convert_to_numpy=True
-        )
-        all_embeddings.append(embeddings)
-    return np.vstack(all_embeddings) if all_embeddings else np.array([])
+class LocalEncoder:
+    """Sentence-transformers encoder."""
+    
+    def __init__(self, model_name: str, dims: int):
+        from sentence_transformers import SentenceTransformer
+        import torch
+        
+        device = "cpu"
+        if torch.backends.mps.is_available():
+            device = "mps"
+            print("  Using Apple Silicon GPU (MPS)")
+        elif torch.cuda.is_available():
+            device = "cuda"
+            print("  Using NVIDIA GPU (CUDA)")
+        
+        self.model = SentenceTransformer(model_name, device=device)
+        self.dims = self.model.get_sentence_embedding_dimension()
+        print(f"  Model dimensions: {self.dims}")
+    
+    def encode(self, texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i+batch_size]
+            embeddings = self.model.encode(
+                batch,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+                convert_to_numpy=True
+            )
+            all_embeddings.append(embeddings)
+        return np.vstack(all_embeddings) if all_embeddings else np.array([])
+
+
+class OpenAIEncoder:
+    """OpenAI API encoder."""
+    
+    def __init__(self, model_name: str, dims: int):
+        try:
+            from openai import OpenAI
+        except ImportError:
+            print("Error: pip install openai")
+            sys.exit(1)
+        
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            print("Error: Set OPENAI_API_KEY environment variable")
+            sys.exit(1)
+        
+        self.client = OpenAI(api_key=api_key)
+        self.model = model_name
+        self.dims = dims
+        print(f"  OpenAI model: {model_name}")
+        print(f"  Dimensions: {dims}")
+    
+    def encode(self, texts: List[str], batch_size: int = 100) -> np.ndarray:
+        """Encode texts using OpenAI API. Batch size limited to avoid rate limits."""
+        all_embeddings = []
+        
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i+batch_size]
+            # OpenAI expects non-empty strings
+            batch = [t if t.strip() else " " for t in batch]
+            
+            response = self.client.embeddings.create(
+                model=self.model,
+                input=batch,
+                dimensions=self.dims  # text-embedding-3 models support dimension reduction
+            )
+            
+            embeddings = np.array([e.embedding for e in response.data])
+            # Normalize (OpenAI embeddings may not be normalized)
+            norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+            embeddings = embeddings / norms
+            all_embeddings.append(embeddings)
+        
+        return np.vstack(all_embeddings) if all_embeddings else np.array([])
+
+
+def get_encoder(provider: str, model_name: str, dims: int):
+    """Factory function to get the appropriate encoder."""
+    if provider == "openai":
+        return OpenAIEncoder(model_name, dims)
+    else:
+        return LocalEncoder(model_name, dims)
 
 
 def concat_fields(*fields, max_length: int = MAX_CHARS) -> str:
@@ -96,14 +180,14 @@ def strip_html(text: str) -> str:
     return re.sub(r'<[^>]+>', '', text) if text else ""
 
 
-def create_verse_embeddings(model, dims: int = DIMS):
+def create_verse_embeddings(encoder, dims: int, emb_dir: Path):
     """Create verse embeddings from verses.sqlite."""
     print("\n[1/3] Creating verse embeddings...")
     
     verses_db = DB_DIR / "verses.sqlite"
     nodes_db = DB_DIR / "nodes.sqlite"
     niv_db = DB_DIR / "niv.sqlite"
-    output_db = EMB_DIR / "verse_vectors.sqlite"
+    output_db = emb_dir / "verse_vectors.sqlite"
     
     if not verses_db.exists():
         print(f"  ✗ verses.sqlite not found")
@@ -168,7 +252,7 @@ def create_verse_embeddings(model, dims: int = DIMS):
             metadata.append((book, chapter, verse_num))
     
     print(f"  Encoding {len(texts):,} verses...")
-    embeddings = encode_batch(model, texts)
+    embeddings = encoder.encode(texts)
     embeddings_int8 = float32_to_int8(embeddings)
     
     # Create output database with vec0
@@ -206,12 +290,12 @@ def create_verse_embeddings(model, dims: int = DIMS):
     return True
 
 
-def create_concept_embeddings(model, dims: int = DIMS):
+def create_concept_embeddings(encoder, dims: int, emb_dir: Path):
     """Create concept embeddings from concepts.sqlite."""
     print("\n[2/3] Creating concept embeddings...")
     
     concepts_db = DB_DIR / "concepts.sqlite"
-    output_db = EMB_DIR / "concept_vectors.sqlite"
+    output_db = emb_dir / "concept_vectors.sqlite"
     
     if not concepts_db.exists():
         print(f"  ✗ concepts.sqlite not found")
@@ -243,7 +327,7 @@ def create_concept_embeddings(model, dims: int = DIMS):
             metadata.append((cid, stem))
     
     print(f"  Encoding {len(texts):,} concepts...")
-    embeddings = encode_batch(model, texts)
+    embeddings = encoder.encode(texts)
     embeddings_int8 = float32_to_int8(embeddings)
     
     # Create output database
@@ -273,12 +357,12 @@ def create_concept_embeddings(model, dims: int = DIMS):
     return True
 
 
-def create_strongs_embeddings(model, strongs_dir: Optional[Path] = None, dims: int = DIMS):
+def create_strongs_embeddings(encoder, dims: int, emb_dir: Path, strongs_dir: Optional[Path] = None):
     """Create Strong's embeddings from YAML files."""
     print("\n[3/3] Creating Strong's embeddings...")
     
     strongs_db = DB_DIR / "strongs.sqlite"
-    output_db = EMB_DIR / "strongs_vectors.sqlite"
+    output_db = emb_dir / "strongs_vectors.sqlite"
     
     if output_db.exists():
         output_db.unlink()
@@ -368,7 +452,7 @@ def create_strongs_embeddings(model, strongs_dir: Optional[Path] = None, dims: i
             continue
     
     print(f"  Encoding {len(texts):,} Strong's entries...")
-    embeddings = encode_batch(model, texts)
+    embeddings = encoder.encode(texts)
     embeddings_int8 = float32_to_int8(embeddings)
     
     # Update strongs.sqlite with data
@@ -412,53 +496,68 @@ def create_strongs_embeddings(model, strongs_dir: Optional[Path] = None, dims: i
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate TBTA embeddings")
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="Sentence transformer model")
+    parser = argparse.ArgumentParser(
+        description="Generate TBTA embeddings",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Local model (default)
+    python scripts/create_embeddings.py
+    python scripts/create_embeddings.py --provider local
+    
+    # OpenAI (requires OPENAI_API_KEY)
+    python scripts/create_embeddings.py --provider openai
+    python scripts/create_embeddings.py --provider openai --dims 384
+        """
+    )
+    parser.add_argument("--provider", choices=["local", "openai"], default="local",
+                        help="Embedding provider (default: local)")
+    parser.add_argument("--model", help="Model name (default depends on provider)")
+    parser.add_argument("--dims", type=int, help="Embedding dimensions (for OpenAI, can reduce)")
     parser.add_argument("--skip-strongs", action="store_true", help="Skip Strong's embeddings")
     parser.add_argument("--strongs-dir", type=Path, help="Path to Strong's YAML directory")
     args = parser.parse_args()
     
+    # Get provider config
+    provider_config = PROVIDERS[args.provider]
+    model_name = args.model or provider_config["default_model"]
+    dims = args.dims or provider_config["default_dims"]
+    
+    # Output directory based on provider
+    emb_dir = EMB_BASE_DIR / args.provider
+    
     print("=" * 60)
     print("TBTA Embedding Generator")
     print("=" * 60)
-    print(f"Model: {args.model}")
-    print(f"Dimensions: {DIMS}")
-    print(f"Batch size: {BATCH_SIZE}")
+    print(f"Provider: {args.provider}")
+    print(f"Model: {model_name}")
+    print(f"Dimensions: {dims}")
+    print(f"Output: {emb_dir}/")
     
     # Create output directory
-    EMB_DIR.mkdir(parents=True, exist_ok=True)
+    emb_dir.mkdir(parents=True, exist_ok=True)
     
-    # Load model
-    print("\nLoading model...")
-    import torch
-    device = "cpu"
-    if torch.backends.mps.is_available():
-        device = "mps"
-        print("  Using Apple Silicon GPU (MPS)")
-    elif torch.cuda.is_available():
-        device = "cuda"
-        print("  Using NVIDIA GPU (CUDA)")
-    else:
-        print("  Using CPU")
+    # Load encoder
+    print("\nLoading encoder...")
+    encoder = get_encoder(args.provider, model_name, dims)
+    dims = encoder.dims  # Get actual dims from encoder
+    print(f"  ✓ Encoder ready")
     
-    model = SentenceTransformer(args.model, device=device)
-    print(f"  ✓ Model loaded")
-    
-    # Create embeddings
-    create_verse_embeddings(model)
-    create_concept_embeddings(model)
+    # Create embeddings (pass encoder and output dir)
+    create_verse_embeddings(encoder, dims, emb_dir)
+    create_concept_embeddings(encoder, dims, emb_dir)
     
     if not args.skip_strongs:
-        create_strongs_embeddings(model, args.strongs_dir)
+        create_strongs_embeddings(encoder, dims, emb_dir, args.strongs_dir)
     
     # Summary
     print("\n" + "=" * 60)
     print("EMBEDDING GENERATION COMPLETE")
     print("=" * 60)
     
-    print("\nCreated embedding databases:")
+    print(f"\nCreated in {emb_dir}/:")
     for name in ["verse_vectors.sqlite", "concept_vectors.sqlite", "strongs_vectors.sqlite"]:
-        path = EMB_DIR / name
+        path = emb_dir / name
         if path.exists():
             size = path.stat().st_size / 1024 / 1024
             print(f"  {name}: {size:.1f} MB")

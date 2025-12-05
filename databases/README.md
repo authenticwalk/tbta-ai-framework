@@ -43,11 +43,14 @@ tbta-ai-framework/
 │   ├── nodes.sqlite        # Parsed word nodes
 │   ├── niv.sqlite          # NIV translations
 │   ├── concepts.sqlite     # Semantic concepts
-│   └── strongs.sqlite      # Strong's lexicon
-├── embeddings/
-│   ├── verse_vectors.sqlite
-│   ├── concept_vectors.sqlite
-│   └── strongs_vectors.sqlite
+│   ├── strongs.sqlite      # Strong's lexicon
+│   └── embeddings/         # Vector embeddings for semantic search
+│       ├── local/          # Local model embeddings
+│       │   ├── verse_vectors.sqlite
+│       │   ├── concept_vectors.sqlite
+│       │   └── strongs_vectors.sqlite
+│       └── openai/         # OpenAI embeddings
+│           └── ...
 └── scripts/
     ├── convert_db.py       # Database conversion
     ├── create_embeddings.py # Vector generation
@@ -242,7 +245,7 @@ from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 # Connect and load vec0 extension
-db = apsw.Connection("embeddings/verse_vectors.sqlite")
+db = apsw.Connection("databases/embeddings/local/verse_vectors.sqlite")
 db.enable_load_extension(True)
 sqlite_vec.load(db)
 ```
@@ -271,7 +274,7 @@ for book, ch, vs, dist in results:
 ### Find similar concepts
 
 ```python
-db = apsw.Connection("embeddings/concept_vectors.sqlite")
+db = apsw.Connection("databases/embeddings/local/concept_vectors.sqlite")
 db.enable_load_extension(True)
 sqlite_vec.load(db)
 
