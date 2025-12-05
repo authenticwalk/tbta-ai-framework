@@ -214,5 +214,52 @@ Some features need context beyond single verse.
 
 ---
 
+---
+
+## Additional Principles
+
+### Semantic Over Morphological
+
+TBTA prioritizes SEMANTIC meaning over source language MORPHOLOGICAL markers.
+
+- Hebrew שָׁמַיִם (dual morphology) → TBTA marks **Singular** (one sky semantically)
+- Greek positive form with superlative context → TBTA marks **Superlative**
+
+**Rule**: "What does this MEAN?" before "What form is it?"
+
+### Scale Testing for Rare Values
+
+Small samples (7-12 verses) lead to INCORRECT conclusions about rare values.
+
+| Verses Tested | Values Found | Discovery |
+|---------------|--------------|-----------|
+| 7 verses | C, S, I | Assumed 'too', 'less' non-existent |
+| 41 verses | + i, T | Found first rare values |
+| 100 verses | + E, L, s | Complete inventory |
+
+**Lesson**: Don't declare values "non-existent" without 100+ verse testing.
+
+### Lexical vs Syntactic Distinction
+
+TBTA only marks SYNTACTIC (grammatical) modification, not LEXICAL (inherent) meaning.
+
+- Syntactic: λίαν πρωῒ ("very early") → Marked as Intensified
+- Lexical: ὑπερεκπερισσοῦ ("abundantly" - compound word) → Not marked
+
+**Rule**: If degree is part of the word itself, it's lexical (not marked).
+
+### Mixed Annotations
+
+Same constituent can receive MULTIPLE feature values simultaneously.
+
+- GEN 18:11 "old" = Intensified + 'too' (very old AND too old)
+- EXO 10:14 "great" = Superlative + Comparative
+
+**Impact**: Algorithms must support arrays of values, not single values.
+
+---
+
 **Status**: Validated from Person, Mood, Aspect, Participant Tracking experiments
-**Related**: [../docs/methodology/](../docs/methodology/) for STAGES.md workflow
+**Related**:
+- [../docs/methodology/](../docs/methodology/) for STAGES.md workflow
+- [hierarchical-prompting.md](hierarchical-prompting.md) for detailed 5-level framework
