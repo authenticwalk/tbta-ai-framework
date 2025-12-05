@@ -4,10 +4,11 @@ Phase 1 encoding converts NIV Bible text into He1 controlled natural language fo
 
 ## Quick Start
 
-1. **Main prompt**: [`/prompts/predict-phase1/CODEX-PROMPT.md`](../../prompts/predict-phase1/CODEX-PROMPT.md)
-2. **Orchestration**: [`/prompts/predict-phase1/SKILL.md`](../../prompts/predict-phase1/SKILL.md)
-3. **Learning workflow**: [`/prompts/predict-phase1/LEARN.md`](../../prompts/predict-phase1/LEARN.md)
-4. **Examples**: [`/prompts/predict-phase1/examples.md`](../../prompts/predict-phase1/examples.md)
+1. **Tutorial**: [`tutorial.md`](tutorial.md) - Step-by-step guide to He1 encoding
+2. **Main prompt**: [`/prompts/predict-phase1/CODEX-PROMPT.md`](../../prompts/predict-phase1/CODEX-PROMPT.md)
+3. **Orchestration**: [`/prompts/predict-phase1/SKILL.md`](../../prompts/predict-phase1/SKILL.md)
+4. **Learning workflow**: [`/prompts/predict-phase1/LEARN.md`](../../prompts/predict-phase1/LEARN.md)
+5. **Examples**: [`/prompts/predict-phase1/examples.md`](../../prompts/predict-phase1/examples.md)
 
 ## Key Concepts
 

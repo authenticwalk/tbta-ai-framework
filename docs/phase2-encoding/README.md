@@ -1,14 +1,29 @@
 # Phase 2 Encoding (Language Features)
 
-> **Status**: Future development. Phase 1 (He1 encoding) is the current focus.
-
-## Overview
-
 Phase 2 applies linguistic features to generate target language output. While Phase 1 creates a language-neutral semantic representation, Phase 2 adds the grammatical and pragmatic choices needed for specific languages.
 
-## Planned Features
+## Quick Start
 
-Based on [research/features/](../../research/features/), Phase 2 will handle:
+1. **6-Stage Methodology**: [`methodology/README.md`](methodology/README.md) - Complete development workflow
+2. **Feature Template**: [`methodology/feature-template.md`](methodology/feature-template.md) - LLM prompt patterns
+
+## Methodology
+
+Development methodology for feature prediction:
+
+| Document | Purpose |
+|----------|---------|
+| [README.md](methodology/README.md) | 6-stage development workflow |
+| [feature-template.md](methodology/feature-template.md) | LLM prompt patterns for any feature |
+| [adversarial-testing.md](methodology/adversarial-testing.md) | Edge case validation |
+| [common-mistakes.md](methodology/common-mistakes.md) | Anti-patterns to avoid |
+| [data-hygiene.md](methodology/data-hygiene.md) | Train/test split protocols |
+| [data-quality.md](methodology/data-quality.md) | TBTA data quality findings |
+| [peer-review.md](methodology/peer-review.md) | 4-persona review framework |
+| [translation-validation.md](methodology/translation-validation.md) | Cross-linguistic validation |
+| [discourse-context.md](methodology/discourse-context.md) | Multi-verse context strategies |
+
+## Feature Categories
 
 ### Grammatical Features
 - **Aspect**: Perfective, imperfective, progressive
@@ -27,9 +42,7 @@ Based on [research/features/](../../research/features/), Phase 2 will handle:
 - **Reflexivity**: Reflexive/reciprocal marking
 - **Proximity-system**: Spatial deixis
 
-## Current Research
-
-Feature research is documented in [research/features/](../../research/features/):
+## Research Status
 
 | Feature | Status | TBTA? |
 |---------|--------|-------|
@@ -43,20 +56,8 @@ Feature research is documented in [research/features/](../../research/features/)
 | degree | Researched | [FUTURE] |
 | semantic-role | Researched | [FUTURE] |
 
-## Development Approach
-
-Phase 2 will use the [6-stage methodology](../methodology/README.md):
-
-1. Research linguistic literature
-2. Analyze current TBTA implementation
-3. Design AI-readable feature encoding
-4. Implement extraction/prediction tools
-5. Validate across language families
-6. Document and deploy
-
 ## Related
 
-- [Phase 1 Encoding](../phase1-encoding/) - Current focus (He1)
+- [Phase 1 Encoding](../phase1-encoding/) - He1 controlled language
 - [Research Features](../../research/features/) - Feature documentation
-- [Methodology](../methodology/) - Development workflow
 - [Learnings](../../learnings/) - Cross-feature patterns
