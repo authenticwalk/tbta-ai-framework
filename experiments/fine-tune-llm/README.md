@@ -2,6 +2,70 @@
 
 Fine-tune LLMs to predict TBTA semantic encodings from Bible verse references.
 
+**Hypothesis**: All the Bible translations, commentaries, and linguistic knowledge are embedded in the model's training. Can we extract this knowledge by fine-tuning on just verse references → TBTA encodings?
+
+---
+
+## Phase 1 Results (OpenAI)
+
+Trained on 7,248 verses (1 Samuel), validated on 398 holdout verses.
+
+### Experiment: Simple Prompt (verse → simplified translation)
+
+| Model | Train Loss | Valid Loss | Accuracy | Cost |
+|-------|-----------|------------|----------|------|
+| **gpt-4.1** (simple) | 0.259 | 0.673 | **~85%** | ~$15 |
+| gpt-4.1-nano (simple) | 1.220 | 1.180 | ~75% | ~$3 |
+| gpt-4.1 (detailed) | 0.406 | 0.990 | ~72% | ~$15 |
+
+**Best model**: `ft:gpt-4.1-2025-04-14:authentic-walk-creative:tbta-gpt41-simple:Ciw8i0S9`
+
+**Key findings**:
+- Simple prompt outperforms detailed system prompt
+- GPT-4.1 significantly outperforms nano on this task
+- Validation accuracy plateaus around ~85%, suggesting ceiling of memorized knowledge
+
+### Prompt Variants Tested
+
+**Simple** (`-simple` suffix): Just the instruction
+```
+Translate this verse into a simplified english based on the NIV
+```
+
+**Detailed** (no suffix): Full TBTA format specification
+```
+You are a TBTA (The Bible Translator's Assistant) encoder. Convert Bible verse 
+references into TBTA language-neutral translation format.
+
+TBTA FORMAT CONVENTIONS:
+- (paragraph) (title) - structural markers
+- (literal) (dynamic) - translation approach markers
+- [bracketed text] - implicit information, alternatives, or clarifications
+...
+```
+
+### Data Formats
+
+| Format | System Prompt | Output |
+|--------|---------------|--------|
+| `verse/` | Simple | Simplified translation with TBTA markers |
+| `analyzed/` | Morphology encoding | `~\wd ~\tg` tagged format with grammar codes |
+| `expanded/` | Full JSON request | Complete hierarchical linguistic analysis |
+
+---
+
+## Phase 2 (Not Yet Run)
+
+**Estimated cost**: ~$75 USD
+
+Planned experiments:
+- [ ] Full analyzed verse format (complex morphology encoding)
+- [ ] Expanded JSON format (hierarchical clause structure)
+- [ ] Multi-book training (beyond 1 Samuel)
+- [ ] Evaluate on unseen books
+
+---
+
 ## Quick Start
 
 ```bash
@@ -27,12 +91,6 @@ python train_google.py --project YOUR_PROJECT --bucket YOUR_BUCKET
 | `train_openai.py` | Fine-tune with OpenAI API |
 | `train_google.py` | Fine-tune with Google Vertex AI |
 | `evaluate.py` | Evaluate model on holdout set |
-
-## Data Format
-
-Training data is exported in two formats:
-- `data/openai/` - OpenAI chat format (`messages` array)
-- `data/google/` - Google Vertex AI format (`contents` array)
 
 ---
 
@@ -104,6 +162,7 @@ python train_google.py
 
 | Platform | Model | ~Cost |
 |----------|-------|-------|
-| OpenAI | gpt-4.1-mini | $8-15 |
+| OpenAI | gpt-4.1 | $15-20 |
+| OpenAI | gpt-4.1-nano | $3-5 |
 | Google | gemini-2.0-flash | $5-10 |
 
