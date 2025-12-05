@@ -261,5 +261,5 @@ Same constituent can receive MULTIPLE feature values simultaneously.
 
 **Status**: Validated from Person, Mood, Aspect, Participant Tracking experiments
 **Related**:
-- [../docs/methodology/](../docs/methodology/) for STAGES.md workflow
-- [hierarchical-prompting.md](hierarchical-prompting.md) for detailed 5-level framework
+- [README.md](README.md) for STAGES.md workflow
+- [prompting-strategy.md](prompting-strategy.md) for detailed 5-level framework

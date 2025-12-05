@@ -24,8 +24,4 @@ Predicts linguistic features (aspect, mood, clusivity, etc.) for target language
 - Adversarial testing and validation
 - Feature implementation template
 
-## Architecture
 
-Developer guide to the framework architecture.
-
-→ See [`architecture/`](architecture/)

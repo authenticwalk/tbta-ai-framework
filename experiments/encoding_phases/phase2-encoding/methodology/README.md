@@ -1,4 +1,11 @@
-The following summarizes the correct stages to build a new feature.  If you are improving a feature you should validate that it has done all of these stages
+The following summarizes the correct stages to build a new feature. If you are improving a feature you should validate that it has done all of these stages.
+
+## Quick Links
+
+- **[feature-learnings.md](feature-learnings.md)** - Validated patterns from experiments (Person, Mood, Aspect, Participant Tracking)
+- **[prompting-strategy.md](prompting-strategy.md)** - Hierarchical prompting framework for LLM feature prediction
+- **[adversarial-testing.md](adversarial-testing.md)** - Testing protocol for edge cases
+- **[translation-validation.md](translation-validation.md)** - Cross-linguistic validation approach
 
 # 1. Research TBTA Documentation
 
