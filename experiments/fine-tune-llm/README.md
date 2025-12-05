@@ -10,6 +10,8 @@ Fine-tune LLMs to predict TBTA semantic encodings from Bible verse references.
 
 Trained on 7,248 verses (1 Samuel), validated on 398 holdout verses.
 
+> **Note**: Google Vertex AI training was not run in Phase 1 due to time constraints.
+
 ### Experiment: Simple Prompt (verse → simplified translation)
 
 | Model | Train Loss | Valid Loss | Accuracy | Cost |
@@ -191,9 +193,15 @@ Saul's servants said to Saul, ["A spirit [that comes from God] is bothering you(
 ### Recommended Approach for Phase 2
 
 **Step 1: Baseline Schema Knowledge Audit**
-- Test unfine-tuned models on TBTA encoding tasks
-- Document which conventions it already knows vs needs training
-- Identify gaps to focus training data on
+
+See [`../current-knowledge/`](../current-knowledge/) for analysis of what various LLMs already know about TBTA:
+- [GPT-5.1](../current-knowledge/GPT-5.1.md)
+- [DeepSeek3-1](../current-knowledge/DeepSeek3-1.md)
+- [DeepSeekR1](../current-knowledge/DeepSeekR1.md)
+
+Key questions to answer:
+- Which TBTA conventions does the model already know vs need training?
+- What gaps should we focus training data on?
 
 **Step 2: Mixed Task Training**
 
