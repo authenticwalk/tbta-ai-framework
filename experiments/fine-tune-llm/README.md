@@ -182,9 +182,41 @@ Saul's servants said to Saul, ["A spirit [that comes from God] is bothering you(
 
 **Estimated cost**: ~$75 USD
 
-Planned experiments:
+### Open Questions from Phase 1
+
+1. **Was the prompt the problem?** The detailed prompt underperformed—but was it unclear, or just too complex?
+2. **Should we include verse text?** Currently input is just "1 Samuel 16:15". Would "1 Samuel 16:15: Saul's attendants said to him..." help ground the model?
+3. **How much does GPT already know?** The baseline showed TBTA awareness. Should we map existing knowledge before fine-tuning?
+
+### Recommended Approach for Phase 2
+
+**Step 1: Baseline Schema Knowledge Audit**
+- Test unfine-tuned models on TBTA encoding tasks
+- Document which conventions it already knows vs needs training
+- Identify gaps to focus training data on
+
+**Step 2: Mixed Task Training**
+
+| Task Type | Example | Purpose |
+|-----------|---------|---------|
+| **Word-level encoding** | "Encode 'spirit' in: 'an evil spirit from God'" | Smaller data, focused learning |
+| **Full phrase encoding** | "Encode: 1 Samuel 16:15" | Holistic understanding |
+| **Feature extraction** | "What is the Numeral feature in Gen 1:26 when God says 'let us'?" | Targeted schema comprehension |
+| **Error correction** | "This encoding is wrong: [...]. Fix it." | Learn from mistakes |
+| **Format variation** | Same content → JSON vs analyzed dataframe | Format flexibility |
+
+**Step 3: Corpus from Distinct Nodes**
+- Extract all `db.nodes` grouped by distinct semantic categories
+- Provide 1-3 examples per node type
+- Creates balanced coverage across the schema
+
+### Planned Experiments
+
+- [ ] Add verse text to input (not just reference)
 - [ ] Full analyzed verse format (complex morphology encoding)
 - [ ] Expanded JSON format (hierarchical clause structure)
+- [ ] Word-level encoding with highlighted terms
+- [ ] Multi-task training (encoding + QA + correction)
 - [ ] Multi-book training (beyond 1 Samuel)
 - [ ] Evaluate on unseen books
 
