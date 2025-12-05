@@ -96,12 +96,12 @@ WHERE strongs_mappings LIKE '%H157%';  -- Hebrew "ahab" (love)
 
 ## Semantic Search with Embeddings
 
-Embeddings let you search by **meaning**, not just keywords.
+Embeddings let you search by **meaning**, not just keywords. See [`scripts/embeddings/`](../scripts/embeddings/) for all embedding tools and detailed documentation.
 
 **New to embeddings?** Run the interactive tutorial:
 
 ```bash
-python scripts/demo_embeddings.py teach
+python scripts/embeddings/demo_embeddings.py teach
 ```
 
 This walks you through what embeddings are and lets you experiment with word similarity.
@@ -141,23 +141,23 @@ for book, ch, vs, dist in results:
 
 ```bash
 # CLI search
-python scripts/demo_embeddings.py search "salvation and redemption"
+python scripts/embeddings/demo_embeddings.py search "salvation and redemption"
 
 # Word-by-word verse analysis
-python scripts/demo_embeddings.py analyze "For God so loved the world"
+python scripts/embeddings/demo_embeddings.py analyze "For God so loved the world"
 ```
 
 ### Other demo modes
 
 ```bash
 # Compare how different embedding strategies perform
-python scripts/demo_embeddings.py experiment
+python scripts/embeddings/demo_embeddings.py experiment
 
 # Match unmapped concepts to Strong's numbers
-python scripts/demo_embeddings.py match
+python scripts/embeddings/demo_embeddings.py match
 
 # Compare local vs OpenAI embeddings
-python scripts/compare_providers.py
+python scripts/embeddings/compare_providers.py
 ```
 
 ## Database Schemas
@@ -239,11 +239,11 @@ cp /path/to/Bible.sqlite databases/original/
 cp /path/to/Ontology.sqlite databases/original/
 
 # 2. Convert to modular format
-python scripts/convert_db.py
+python scripts/database/convert_db.py
 
 # 3. Generate embeddings
 pip install sentence-transformers sqlite-vec apsw numpy tqdm
-python scripts/create_embeddings.py
+python scripts/embeddings/create_embeddings.py
 ```
 
 ## Size Comparison
@@ -271,6 +271,7 @@ pip install sentence-transformers sqlite-vec apsw numpy tqdm
 
 ## Learn More
 
-- **Embeddings tutorial**: `python scripts/demo_embeddings.py teach`
-- **Compare providers**: `python scripts/compare_providers.py`
-- **Conversion script**: `python scripts/convert_db.py --help`
+- **Embeddings guide**: [`scripts/embeddings/`](../scripts/embeddings/) — full documentation on semantic search
+- **Embeddings tutorial**: `python scripts/embeddings/demo_embeddings.py teach`
+- **Compare providers**: `python scripts/embeddings/compare_providers.py`
+- **Conversion script**: `python scripts/database/convert_db.py --help`
