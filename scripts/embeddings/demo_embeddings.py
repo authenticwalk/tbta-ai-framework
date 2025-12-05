@@ -31,7 +31,7 @@ except ImportError:
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
-PROJECT_DIR = SCRIPT_DIR.parent
+PROJECT_DIR = SCRIPT_DIR.parent.parent  # scripts/embeddings -> scripts -> tbta-ai-framework
 DB_DIR = PROJECT_DIR / "databases"
 EMB_BASE_DIR = PROJECT_DIR / "databases" / "embeddings"
 

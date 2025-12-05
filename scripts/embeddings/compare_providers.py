@@ -480,8 +480,8 @@ def test_local(test_groups):
     print("LOCAL: paraphrase-multilingual-MiniLM-L12-v2")
     print("=" * 60)
     
-    from sentence_transformers import SentenceTransformer
     import torch
+    from sentence_transformers import SentenceTransformer
     
     device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
     model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", device=device)

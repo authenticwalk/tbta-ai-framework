@@ -76,7 +76,7 @@ class Config:
         self.strongs_db = output_dir / "strongs.sqlite"
         
         # External data paths (relative to project root)
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).parent.parent.parent  # scripts/database -> scripts -> tbta-ai-framework
         self.biblevec_db = project_root.parent / "databases" / "BibleVec.sqlite"
         self.strongs_mappings_tsv = project_root / "scripts" / "add_strongs_to_concepts" / "data" / "concept_strongs_mappings.tsv"
 
@@ -663,7 +663,7 @@ def main():
     """Main conversion process."""
     # Determine paths
     script_dir = Path(__file__).parent
-    project_dir = script_dir.parent
+    project_dir = script_dir.parent.parent  # scripts/database -> scripts -> tbta-ai-framework
     default_source = project_dir / "databases" / "original"
     default_output = project_dir / "databases"
     

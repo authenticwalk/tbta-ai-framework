@@ -37,7 +37,7 @@ import re
 import sqlite3
 import sys
 from pathlib import Path
-from typing import List, Optional, Callable
+from typing import Callable, List, Optional
 
 import numpy as np
 
@@ -57,7 +57,7 @@ except ImportError:
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
-PROJECT_DIR = SCRIPT_DIR.parent
+PROJECT_DIR = SCRIPT_DIR.parent.parent  # scripts/embeddings -> scripts -> tbta-ai-framework
 DB_DIR = PROJECT_DIR / "databases"
 EMB_BASE_DIR = PROJECT_DIR / "databases" / "embeddings"
 
@@ -87,8 +87,8 @@ class LocalEncoder:
     """Sentence-transformers encoder."""
     
     def __init__(self, model_name: str, dims: int):
-        from sentence_transformers import SentenceTransformer
         import torch
+        from sentence_transformers import SentenceTransformer
         
         device = "cpu"
         if torch.backends.mps.is_available():
