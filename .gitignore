@@ -1,8 +1,11 @@
 # Source databases (too large for git)
 databases/original/
 
-# Generated databases
+# Generated databases (derived from TBTA - share directly)
 databases/niv*
+databases/concepts.sqlite
+databases/nodes.sqlite
+databases/verses.sqlite
 
 # Python
 __pycache__/
